@@ -1,0 +1,182 @@
+
+
+1. Carga
+
+* Caso CSV, desde Google: 
+```{r}
+# link a data:
+linkCSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vTcFY_f_k94wuMUL8ISrklSmjlbYgnPeEVdGApFI0Y39OQB8IrHvv1bmD6E0u9uYo06Bpl5llns-BLR/pub?gid=1282421390&single=true&output=csv"
+
+# recuperar data:
+hsbCSV=read.csv(linkCSV,stringsAsFactors = F)
+
+# ver lo que se recuperó:
+head(hsbCSV)
+```
+
+
+* Caso SPSS, desde GitHub:
+```{r}
+# link a data:
+linkSPSS="https://github.com/PsicologiaPUCP/ArchivosDeDatos/raw/master/hsb.sav"
+
+# recuperar data:
+library(foreign) 
+hsbSPSS=read.spss(linkSPSS,to.data.frame = T)
+
+# ver lo que se recuperó:
+head(hsbSPSS)
+```
+
+2. Identificar Escalas de Medicion
+
+Se debe usar el Diccionario de Datos
+```{r}
+str(hsbSPSS)
+```
+
+```{r}
+str(hsbCSV)
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+str(dataSPSS,width=50,strict.width='cut')
+```
+
+Transformando:
+
+```{r}
+dataSPSS$ID=as.character(dataSPSS$ID)
+```
+
+```{r}
+dataSPSS[,c(2,3,5,6,10)]=lapply(dataSPSS[,c(2,3,5,6,10)], as.factor)
+```
+
+```{r}
+dataSPSS$SES=as.ordered(dataSPSS$SES)
+```
+
+3. Recodificando:
+
+```{r}
+#sex: verificar orden
+levels(dataSPSS$SEX)
+```
+
+```{r}
+# recodificacion de 'labels' debe respetar orden de 'levels'
+
+dataSPSS$SEX=factor(dataSPSS$SEX,
+                    levels = levels(dataSPSS$SEX),
+                    labels = c("Hombre","Mujer"),
+                    ordered = F)
+```
+
+
+
+```{r}
+#ses: verificar orden
+levels(dataSPSS$SES)
+```
+```{r}
+# recodificacion de 'labels' debe respetar orden de 'levels'
+
+dataSPSS$SES=factor(dataSPSS$SES,
+                    levels = levels(dataSPSS$SES),
+                    labels = c("Bajo","Medio","Alto"),
+                    ordered = T)
+```
+
+Continuar...
+
+4. Exploracion
+
+4.1 Nominal
+
+Frequencias Absolutas:
+```{r}
+table(dataSPSS$SEX)
+```
+
+Frequencias Relativas:
+```{r}
+prop.table(table(dataSPSS$SEX))
+```
+
+Graficas
+```{r}
+barplot(prop.table(table(dataSPSS$SEX)),
+        ylim = c(0,0.6),
+        ylab = "%",
+        border = NA,
+        col= "grey80",
+        main="Mi titulo")
+```
+
+
+4.2 Ordinal
+
+Frequencias Absolutas:
+```{r}
+table(dataSPSS$SES)
+```
+
+Frequencias Relativas:
+```{r}
+prop.table(table(dataSPSS$SES))
+```
+
+Graficas
+```{r}
+barplot(prop.table(table(dataSPSS$SES)),
+        ylim = c(0,0.5),
+        ylab = "%",
+        border = NA,
+        col= "grey80",
+        main="Mi titulo")
+```
+
+```{r}
+boxplot(dataSPSS$SES,horizontal = T,
+        col= "lightblue",
+        main="Mi titulo",
+        xaxt='n')
+axis(side=1,
+     labels=c('Bajo','Medio','Alto'),
+     at=c(1,2,3))
+```
+
+
+
+```{r}
+summary(as.numeric(dataSPSS$SES))
+```
+
+4.3 Numerico
+
+
+
+Frequencias Relativas:
+```{r}
+summary(dataSPSS$MATH)
+```
+
+Graficas
+```{r}
+hist(dataSPSS$MATH)
+```
+
+```{r}
+boxplot(dataSPSS$MATH,horizontal = T)
+```
