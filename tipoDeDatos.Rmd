@@ -15,13 +15,13 @@ ____
 <center> <header><h2>Cambiando atributos de las variables</h2>  </header></center>
 ____
 
-1. Carga de archivos;
+### 1. Carga de archivos
 
 Los archivos deben estar siempre en la nube, si es en SPSS se puede usar GitHub para almacenarlos, si es en CSV, en GoogleSheets. En particular, usaras SPSS si alguien comparte ese tipo de archivo contigo; pro si recoges tu propia información, será mejor que te familiarices con CSV en Google.
 
 * Caso CSV, desde Google: 
 
-El link que necesitas lo creas **publicando** tu hoja de datos eb formato CSV. Este es un link de ejemplo:
+El link que necesitas lo creas **publicando** tu hoja de datos en formato CSV. Este es un link de ejemplo:
 ```{r}
 # link a data:
 linkCSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vTcFY_f_k94wuMUL8ISrklSmjlbYgnPeEVdGApFI0Y39OQB8IrHvv1bmD6E0u9uYo06Bpl5llns-BLR/pub?gid=1282421390&single=true&output=csv"
@@ -38,7 +38,7 @@ head(hsbCSV)
 
 Si alguien te comparte un archivo de SPSS, este archivo subelo  GitHub. Luego, copia el enlace de descarga:
 
-```{r}
+```{r, message=FALSE}
 # link a data:
 linkSPSS="https://github.com/PsicologiaPUCP/ArchivosDeDatos/raw/master/hsb.sav"
 
@@ -50,12 +50,12 @@ hsbSPSS=read.spss(linkSPSS,to.data.frame = T)
 head(hsbSPSS)
 ```
 
-2. Identificar atributos
+### 2. Identificar atributos
 
 Toda variable tiene:
 
 * Nombre
-* Descripcion
+* Descripción
 * Escala
     - Texto
     - Categórica
@@ -67,19 +67,22 @@ Si la variable es *Categórica*, tiene **niveles**.
 
 Esta información debe buscarse en el diccionario de datos o las guías metodológicas de la data. Para el caso de la data que acabamos de abrir, el documento está [aquí](https://github.com/PsicologiaPUCP/ArchivosDeDatos/raw/master/metadata/hsb.pdf). Las variables deben tener esta información; y eso es lo que haremos a continuación.
 
+
+### 3. Reajustar tipo de datos
+
 El ajuste lo podemos hacer a cualquiera de los archivos. Hagámoslo al CSV, pues es el que necesitas para tu trabajo final. Primero veamos qué ha identificado este archivo por _default_:
 
 ```{r}
 str(hsbCSV)
 ```
 
-Toda tabla de datos debe tener un campo único (clave o _key_). Ese campo debe ser tipo texto. El campo clave de esta tabla de *ID*, pero se ha leido como número entero. Podemos cambiarlo así:
+Toda tabla de datos debe tener un campo único (clave o _key_). Ese campo debe ser tipo texto. El campo clave de esta tabla de *ID*, pero se ha leído como número entero. Podemos cambiarlo así:
 
 ```{r}
 hsbCSV$ID=as.character(hsbCSV$ID)
 ```
 
-Siguiendo las especificaciones de la metadata, vemos que R ha identificado bien todas las numéricas, desde LOCUS a CIV, descartando a CAR. R y SPSS identifican siempre los valores con decimales como numeros, salvo que algun valor está mal escrito en esa columna (sea un texto):
+Siguiendo las especificaciones de la metadata, vemos que R ha identificado bien todas las numéricas, desde LOCUS a CIV, descartando a CAR. R y SPSS identifican siempre los valores con decimales como números, salvo que algún valor está mal escrito en esa columna (sea un texto):
 
 <img src="https://github.com/PsicologiaPUCP/codigos/raw/master/pics/spss_default.png" width="500">
 
@@ -88,7 +91,7 @@ De aquí sabemos que el mayor trabajo está en las categóricas.  Si estás en S
 <img src="https://github.com/PsicologiaPUCP/codigos/raw/master/pics/spss_VarProperties.png" width="500">
 
 
-R denomina llama a las categóricas _factor_. El código para convertir estás variables en factor, debende si estas son Nominales u Ordinales. Ajustemos la única ordinal que hay, nivel socio economico. Sigue estos pasos:
+R denomina llama a las categóricas _factor_. El código para convertir estás variables en factor, depende si estas son Nominales u Ordinales. Ajustemos la única ordinal que hay, nivel socio económico. Sigue estos pasos:
 
 * Explorar:
 ```{r}
@@ -149,19 +152,23 @@ str(hsbCSV)
 ```
 
 
-Si haces lo correcto en SPSS, habrías obtenido esto:
+Si haces lo correcto en [SPSS](https://github.com/PsicologiaPUCP/ArchivosDeDatos/raw/master/hsb_atributos.sps), habrías obtenido esto:
 
 <img src="https://github.com/PsicologiaPUCP/codigos/raw/master/pics/spss_ajustado.png" width="500">
+
+
+### 4. Pedir Descriptivos
 
 Cuando tengas ya los datos ajustados, puedes ya solicitar los estadísticos descriptivos:
 ```{r}
 summary(hsbCSV)
 ```
 
-Nótese que R, cuando ya sabe el tipo de variable, informar lo que corresponde, sin embargo, si a SPSS le pides descriptivos obtienes esto:
+Nótese que R, cuando ya sabe el tipo de variable, informar lo que corresponde, sin embargo, si a SPSS le pides [descriptivos](https://github.com/PsicologiaPUCP/ArchivosDeDatos/raw/master/hsb_descriptivos.sps) obtienes esto:
 
 <img src="https://github.com/PsicologiaPUCP/codigos/raw/master/pics/spss_descriptivos.png" width="500">
 
+¿Qué diferencias encuentras?
 
 
 
