@@ -169,6 +169,7 @@ Nótese que R, cuando ya sabe el tipo de variable, informar lo que corresponde, 
 <img src="https://github.com/PsicologiaPUCP/codigos/raw/master/pics/spss_descriptivos.png" width="500">
 
 ¿Qué diferencias encuentras?
+_____
 
 
 
