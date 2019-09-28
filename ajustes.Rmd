@@ -145,35 +145,35 @@ table(hsbCSV$SES)
 
 Las nominales se convierten así:
 ```{r}
-# etiquetas
-varsLabels=list(SEX=c('Male','Female'), 
-                RACE=c('Hispanic','Asian','Black','White'),
-                SCTYP=c('Public','Private'),
-                HSP=c('General','Academic preparatory','Vocational/technical'),
-                CAR=c('Clerical','Craftsman','Farmer','Homemaker','Laborer','Manager',
-                  'Military','Operative','Professional 1','Professional 2','Proprietor',
-                  'Protective','Sales','School','Service','Technical','Not working'))
-
-# cambios
-hsbCSV$SEX=factor(hsbCSV$SEX,
-                  levels = 1:length(varsLabels$SEX),
-                  labels=varsLabels$SEX)
-
-hsbCSV$RACE=factor(hsbCSV$RACE,
-                  levels = 1:length(varsLabels$RACE),
-                  labels=varsLabels$RACE)
-
-hsbCSV$SCTYP=factor(hsbCSV$SCTYP,
-                  levels = 1:length(varsLabels$SCTYP),
-                  labels=varsLabels$SCTYP)
-
-hsbCSV$HSP=factor(hsbCSV$HSP,
-                  levels = 1:length(varsLabels$HSP),
-                  labels=varsLabels$HSP)
-
-hsbCSV$CAR=factor(hsbCSV$CAR,
-                  levels = 1:length(varsLabels$CAR),
-                  labels=varsLabels$CAR)
+# # etiquetas
+# SEXlabels=c('Male','Female')
+# RACElabels=c('Hispanic','Asian','Black','White')
+# SCTYPlabels=c('Public','Private')
+# HSPlabels=c('General','Academic preparatory','Vocational/technical')
+# CARlabels=c('Clerical','Craftsman','Farmer','Homemaker','Laborer','Manager',
+#             'Military','Operative','Professional 1','Professional 2','Proprietor',
+#             'Protective','Sales','School','Service','Technical','Not working')
+# 
+# # cambios
+# hsb$SEX=factor(hsb$SEX,
+#                levels = 1:length(SEXlabels),
+#                labels = SEXlabels)
+# 
+# hsb$RACE=factor(hsb$RACE,
+#                 levels = 1:length(RACElabels),
+#                 labels = RACElabels)
+# 
+# hsb$SCTYP=factor(hsb$SCTYP,
+#                   levels = 1:length(SCTYPlabels),
+#                   labels=SCTYPlabels)
+# 
+# hsb$HSP=factor(hsb$HSP,
+#                   levels = 1:length(HSPlabels),
+#                   labels=HSPlabels)
+# 
+# hsb$CAR=factor(hsb$CAR,
+#                   levels = 1:length(CARlabels),
+#                   labels=CARlabels)
 ```
 
 La metadata de R se debe haber modificado.

@@ -1,0 +1,256 @@
+
+<center><img src="https://github.com/PsicologiaPUCP/codigos/raw/master/pics/LOGO_PUCP.png" width="500"></center>
+
+<center> <header><h1>PSICOLOGIA: Investigación y Estadística II</h1>  </header></center>
+
+* Profesor:  <a href="http://www.pucp.edu.pe/profesor/jose-manuel-magallanes/" target="_blank">Dr. José Manuel Magallanes, Ph.D.</a> <br>
+    - Profesor del Departamento de Ciencias Sociales, Sección de Ciencia Política y Gobierno. Profesor Afiliado del Departamento de Psicología.
+    - [Oficina 105](https://goo.gl/maps/xuGeG6o9di1i1y5m6) - Edificio CISEPA / ECONOMIA / CCSS
+    - Telefono: (51) 1 - 6262000 anexo 4302
+    - Correo Electrónico: [jmagallanes@pucp.edu.pe](mailto:jmagallanes@pucp.edu.pe)
+    
+
+____
+
+<center> <header><h2>De la Correlación a la Regresión</h2>  </header></center>
+____
+
+
+En esta sesión deseo que entiendas por qué es necesario ir más allá de la correlación (_Pearson_, _Spearman_, etc.) o las diferencias de valores medios (_t test_, _kruska wallis_, etc.) .
+
+Trabajemos con nuestros datos del archivo en SPSS **hsb.sav**:
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+library(rio)
+linkToData='https://github.com/PsicologiaPUCP/ArchivosDeDatos/raw/master/hsb_ok.sav'
+hsb=import(linkToData)
+
+categoricals=c("SEX","RACE","SES","SCTYP","HSP","CAR")
+
+hsb[,categoricals]=factorize(hsb[,categoricals])
+
+hsb$SES=ordered(hsb$SES,levels=c("Low","Medium","High" ))
+```
+
+1. Asumamos que nuestra variable de interés es el desempeño en matemáticas; así, nuestra _variable dependiente_ está  representada por la variable _MATH_. 
+
+2. Consideremos que nos interesa saber la posible relación que pueda tener la variable que ha medido el desempeño en escritura; así una variable independiente sería la representada por la variable _WRTG_.  Hasta ahora sabemos que como son _dos_ variables de tipo _numérico_ debemos usar una correlación. La gráfica de correlación es esta:
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+library(ggplot2)
+
+base=ggplot(data=hsb, aes(x=WRTG, y=MATH))
+scatter = base + geom_point()
+scatter
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+f1=formula(~MATH + WRTG)
+pearsonf1=cor.test(f1,data=hsb)[c('estimate','p.value')]
+spearmanf1=cor.test(f1,data=hsb,method='spearman')[c('estimate','p.value')]
+```
+
+Vemos que hay una aparente relación. Asumiendo un camino paramétrico, podemos pedir el coeficiente de Pearson, el cuál al ser calculado obtenemos `r pearsonf1[1]` (con p-value= `r round(as.numeric(pearsonf1[2]),3)`). Si hubieramos seguido una ruta no paramétrica, informaríamo el coeficiente de Spearman:`r spearmanf1[1]` (con p-value= `r round(as.numeric(spearmanf1[2]),3)`).
+
+3. Consideremos que nos interesa además saber _a la vez_ la posible relación que pueda tener la variable que ha medido el desempeño en ciencias; así otra variable independiente sería la representada por la variable _SCI_.  Como es otra variable _numérica_ no podemos calcular la correlación de tres variables, pero podemos tratar de verlo visualmente:
+
+* En tres dimensiones:
+
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+library(scatterplot3d)
+scatterplot3d(hsb[,c('SCI','WRTG','MATH')])
+```
+
+* En dos dimensiones:
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+base=ggplot(data=hsb, aes(x=WRTG, y=MATH))
+base + geom_point(aes(color = SCI))
+
+```
+
+
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+f2=formula(~MATH+SCI)
+pearsonf2=cor.test(f2,data=hsb)[c('estimate','p.value')]
+spearmanf2=cor.test(f2,data=hsb, method='spearman')[c('estimate','p.value')]
+
+```
+
+Podríamos calcular la correlación de SCI con MATH, obteniendo el Pearson (`r pearsonf2[1]`, p-value= `r round(as.numeric(pearsonf2[2]),3)`) y el Spearman (`r spearmanf2[1]`,p-value= `r round(as.numeric(spearmanf2[2]),3)`).  
+
+Visualmente vemos relación, pero no tenemos un coeficiente para los tres.
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, eval=FALSE}
+# not run
+f3=formula(~WRTG+SCI)
+cor.test(f3,data=hsb)[c('estimate','p.value')]
+```
+
+4. Y si quiesieramos ver si el sexo tiene algun rol en todo esto? Como esta es una variable _categórica_ y _dicotómica_ esto es lo primero que puede venir a la mente:
+
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+base=ggplot(data=hsb, aes(x=SEX, y=MATH))
+base + geom_boxplot(notch = T)
+
+```
+
+Los boxplots tienen un _notch_ flanqueando a la mediana, para sugerir igualdad de medianas si éstos se intersectan. 
+
+Este gráfico también ayuda mucho:
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+library(ggplot2)
+ggplot(hsb,aes(x=MATH)) + geom_histogram(aes(y = ..density..),bins = 20, fill='green') +
+        stat_function(fun = dnorm, colour = "red",
+                      args = list(mean = mean(hsb$MATH, na.rm = TRUE),
+                                 sd = sd(hsb$MATH, na.rm = TRUE))) + facet_grid(~SEX) + coord_flip()
+```
+
+En ambos casos, no parece haber diferencia sustantiva entre hombres y mujeres en cuanto a su desempeño en MATH. 
+
+Nota que los histogramas de la data _real_ tienen encima la curva _normal_ que _idealmente_ tendría esa data. La lejanía entre ellos, sugeriría no normalidad.Claro está que tenemos por costumbre calcular algun coeficiente, como el _Shapiro-Wilk_:
+
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, eval=FALSE}
+#not run
+library(ggpubr)
+ggqqplot(data=hsb,x="MATH") + facet_grid(. ~ SEX)
+```
+
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+library(RVAideMemoire)
+library(knitr)
+library(magrittr)
+library(kableExtra)
+f4=formula(MATH~SEX)
+
+kable(byf.shapiro(f4, data=hsb)$tab)%>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F, position = "left")
+```
+
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+tf4=t.test(f4,data=hsb)[c('estimate','p.value')]
+wilcoxf4=wilcox.test(f4,data=hsb)['p.value']
+```
+
+Esto nos sugiere un camino no paramétrico para ver la diferencia de valores medios. La prueba no paramétrica no rechazaría la igualdad de valores medios (Mann-Whitney con p valor = `r wilcoxf4`).
+
+* Veamos como representar al sexo en nuestra gráfica entre WRTG y MATH:
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+base=ggplot(data=hsb, aes(x=WRTG, y=MATH))
+base + geom_point(aes(color = SEX))
+
+```
+
+
+* Veamos como representar al sexo en nuestra gráfica entre WRTG, SCI y MATH:
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+base + geom_point(aes(size = SCI, color=SEX,shape=SEX)) + scale_shape_manual(values=c(3, 2))
+```
+
+Otra alternativa puede ser:
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+base + geom_point(aes(color = SCI)) + facet_grid(~SEX)
+```
+
+Y claro:
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+paleta <- c("coral1","cyan" )
+colors <- paleta[as.numeric(hsb$SEX)]
+scatterplot3d(hsb[,c('SCI','WRTG','MATH')],color=colors)
+
+```
+
+En todos los gráficos vemos que los hombres y las mujeres están distribuidos por todo el gráfico, lo cual nos sugiere que no hay diferencias aun en dimensiones mayores a dos. Sin embargo, no tenemos una medida de cuanto cada uno afecta a nuestra independiente.
+
+De ahi que necesitamos la **regresión**.
+
+
+## REGRESIÓN
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+modelo1=formula(MATH~SCI)
+modelo2=formula(MATH ~ SCI + WRTG)
+modelo3= formula(MATH ~ SCI + WRTG + SEX)
+```
+
+
+La regresión si quiere informar cuánto una variable (_independiente_) puede explicar la variación de otra (_dependiente_), de ahí que es una técnica para probar hipótesis direccionales o asimétricas (las correlaciones tiene hipótesis simétricas).
+
+La regresión busca proponer un modelo, es decir una ecuación, que recoja como una variable explcaría a otra. Por ejemplo, para la hipótesis '_el nivel de desempeño en ciencia afecta el desempeño en matemáticas_' la regresión arrojaría este resultado:
+
+<br></br>
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE,results='asis'}
+library(stargazer)
+reg1=lm(modelo1,data=hsb)
+stargazer(reg1,type = "html")
+```
+
+<br></br>
+
+Aquí ya sabemos algo interesante, **primero** que SCI tiene efecto, pues es _significativo_ (indicado por los dos asteriscos); **segundo**, que ese efecto es _directo_, pues el coeficiente calculado es positivo; y **tercero** que la _magnitud_ de ese efecto es `r round(reg1$coefficients[2],3)`, lo que indica cuanto aumenta MATH en promedio cuando SCI se incremente en una unidad.
+
+Esto es información suficiente para representar esa relación con una ecuación. Como la ecuación sólo tiene una variable dependiente podemos producir una recta sobre el gráfico de correlación:
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+ggplot(hsb, aes(x=SCI, y=MATH)) + 
+  geom_point()+
+  geom_smooth(method=lm)
+
+```
+
+Esa recta podemos representarla así:
+
+$$  \hat{Y}= `r reg1$coefficients[1]` + `r reg1$coefficients[2]` \cdot SCI$$
+
+El Y verdadero es MATH, pero la regresión produce un $\hat{Y}$ estimado. Justamente el _R cuadrado ajustado_ (`r summary(reg1)$r.squared`) nos da una pista de nuestra lejanía a una situación perfecto (cuando vale **1**).
+
+Y sí queremos ver el efecto de WRTG?
+
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE,results='asis'}
+reg2=lm(modelo2,data=hsb)
+stargazer(reg2,type = "html")
+```
+
+En este caso...
+
+```{r}
+library(scatterplot3d)
+G  <- scatterplot3d(hsb[,c('SCI','WRTG','MATH')])
+G$plane3d(reg2, draw_polygon = TRUE, draw_lines = FALSE)
+```
+
+
+
+```{r}
+reg3=lm(modelo3,data=hsb)
+summary(reg3)
+```
+```{r}
+library(scatterplot3d)
+colors <- paleta[as.numeric(hsb$SEX)]
+G  <- scatterplot3d(hsb[,c('SCI','WRTG','MATH')],color=colors)
+G$plane3d(reg2, draw_polygon = TRUE, draw_lines = FALSE)
+```
+```{r}
+library(stargazer)
+stargazer(reg1,reg2,reg3, type = "html", title = "My iris models")
+```
+
