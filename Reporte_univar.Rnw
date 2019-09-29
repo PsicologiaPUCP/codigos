@@ -1,0 +1,107 @@
+\documentclass{article}
+%\usepackage[spanish]{babel}
+\usepackage{dcolumn}
+
+\usepackage[utf8]{inputenc}
+\usepackage{longtable}
+\usepackage{authblk}
+\usepackage{adjustbox}
+
+\usepackage{natbib}
+
+
+%\renewcommand\spanishtablename{Tabla}
+
+
+\title{REPORTE FINAL}
+% autores
+\renewcommand\Authand{, y }
+\author[1]{\normalsize Estrella DelCurso}
+\author[2]{\normalsize Prossimo Deal Lado}
+
+\affil[1,2]{\small  Especialidad de Psicologia,PUCP\\
+\texttt{{delcurso,deallado}@pucp.edu.pe}}
+
+\begin{document}
+
+\maketitle
+
+\SweaveOpts{concordance=TRUE}
+
+<<cargaDeData, echo=FALSE>>=
+link="https://docs.google.com/spreadsheets/d/e/2PACX-1vTcFY_f_k94wuMUL8ISrklSmjlbYgnPeEVdGApFI0Y39OQB8IrHvv1bmD6E0u9uYo06Bpl5llns-BLR/pub?gid=1282421390&single=true&output=csv"
+resultados=read.csv(link, stringsAsFactors = F)
+@
+
+<<tipoDeData, echo=FALSE, eval=FALSE>>=
+str(resultados)
+@
+
+<<formateoData, echo=FALSE, eval=FALSE>>=
+resultados$ID=as.character(resultados$ID)
+resultados$SES=factor(resultados$SES,     #variable
+                  levels=c(1,2,3),#orden 
+                  labels = c("Low","Medium","High"), #sigue orden de 'levels'
+                  ordered = TRUE) # para ordinal
+
+# labels
+varsLabels=list(SEX=c('Male','Female'), 
+                RACE=c('Hispanic','Asian','Black','White'),
+                SCTYP=c('Public','Private'),
+                HSP=c('General','Academic preparatory','Vocational/technical'),
+                CAR=c('Clerical','Craftsman','Farmer','Homemaker','Laborer','Manager',
+                  'Military','Operative','Professional 1','Professional 2','Proprietor',
+                  'Protective','Sales','School','Service','Technical','Not working'))
+
+# cambios
+resultados$SEX=factor(resultados$SEX,
+                  levels = 1:length(varsLabels$SEX),
+                  labels=varsLabels$SEX)
+
+resultados$RACE=factor(resultados$RACE,
+                  levels = 1:length(varsLabels$RACE),
+                  labels=varsLabels$RACE)
+
+resultados$SCTYP=factor(resultados$SCTYP,
+                  levels = 1:length(varsLabels$SCTYP),
+                  labels=varsLabels$SCTYP)
+
+resultados$HSP=factor(resultados$HSP,
+                  levels = 1:length(varsLabels$HSP),
+                  labels=varsLabels$HSP)
+
+resultados$CAR=factor(resultados$CAR,
+                  levels = 1:length(varsLabels$CAR),
+                  labels=varsLabels$CAR)
+@
+
+<<explo1, results=tex>>=
+library(stargazer)
+stargazer(resultados[c(7:9)], align=T)
+@
+
+
+<<explo2, results=tex>>=
+library(reporttools)
+tableContinuous(vars=resultados[,c(7:9)],longtable = FALSE,
+                stats = c("n", "min", "mean", "median","max", "iqr"),
+                caption.placement = "top")
+@
+
+<<explo3, results=tex>>=
+library(stargazer)
+tableNominal(resultados[,c(2:4)],longtable = FALSE,
+             caption.placement = "top",
+             add.to.row = list(pos = list(0),
+                               command = "\\hline"))
+@
+
+
+<<>>=
+library(apa)
+
+str(t_apa(t_test(LOCUS~SEX, data = resultados)))
+
+@
+
+\end{document}

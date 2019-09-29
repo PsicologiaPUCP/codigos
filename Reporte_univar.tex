@@ -1,0 +1,140 @@
+\documentclass{article}
+%\usepackage[spanish]{babel}
+\usepackage{dcolumn}
+
+\usepackage[utf8]{inputenc}
+\usepackage{longtable}
+\usepackage{authblk}
+\usepackage{adjustbox}
+
+\usepackage{natbib}
+
+
+%\renewcommand\spanishtablename{Tabla}
+
+
+\title{REPORTE FINAL}
+% autores
+\renewcommand\Authand{, y }
+\author[1]{\normalsize Estrella DelCurso}
+\author[2]{\normalsize Prossimo Deal Lado}
+
+\affil[1,2]{\small  Especialidad de Psicologia,PUCP\\
+\texttt{{delcurso,deallado}@pucp.edu.pe}}
+
+\usepackage{Sweave}
+\begin{document}
+
+\maketitle
+
+\input{Reporte_univar-concordance}
+
+
+
+
+\begin{Schunk}
+\begin{Sinput}
+> library(stargazer)
+> stargazer(resultados[c(7:9)], align=T)
+\end{Sinput}
+% Table created by stargazer v.5.2.2 by Marek Hlavac, Harvard University. E-mail: hlavac at fas.harvard.edu
+% Date and time: Wed, Sep 18, 2019 - 13:44:43
+% Requires LaTeX packages: dcolumn 
+\begin{table}[!htbp] \centering 
+  \caption{} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lD{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} } 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+Statistic & \multicolumn{1}{c}{N} & \multicolumn{1}{c}{Mean} & \multicolumn{1}{c}{St. Dev.} & \multicolumn{1}{c}{Min} & \multicolumn{1}{c}{Pctl(25)} & \multicolumn{1}{c}{Pctl(75)} & \multicolumn{1}{c}{Max} \\ 
+\hline \\[-1.8ex] 
+LOCUS & 600 & 0.097 & 0.670 & -2.230 & -0.372 & 0.510 & 1.360 \\ 
+CONCPT & 600 & 0.005 & 0.706 & -2.620 & -0.300 & 0.440 & 1.190 \\ 
+MOT & 600 & 0.661 & 0.343 & 0.000 & 0.330 & 1.000 & 1.000 \\ 
+\hline \\[-1.8ex] 
+\end{tabular} 
+\end{table} \end{Schunk}
+
+
+\begin{Schunk}
+\begin{Sinput}
+> library(reporttools)
+> tableContinuous(vars=resultados[,c(7:9)],longtable = FALSE,
++                 stats = c("n", "min", "mean", "median","max", "iqr"),
++                 caption.placement = "top")
+\end{Sinput}
+% latex table generated in R 3.6.0 by xtable 1.8-4 package
+% Wed Sep 18 13:44:43 2019
+\begin{table}[ht]
+\centering
+\caption{} 
+\label{}
+\begingroup\footnotesize
+\begin{tabular}{lrrrrrr}
+ \textbf{Variable} & $\mathbf{n}$ & \textbf{Min} & $\mathbf{\bar{x}}$ & $\mathbf{\widetilde{x}}$ & \textbf{Max} & \textbf{IQR} \\ 
+  \hline
+LOCUS & 600 & -2.2 & 0.1 & 0.2 & 1.4 & 0.9 \\ 
+  CONCPT & 600 & -2.6 & 0.0 & 0.0 & 1.2 & 0.7 \\ 
+  MOT & 600 &  0.0 & 0.7 & 0.7 & 1.0 & 0.7 \\ 
+  \end{tabular}
+\endgroup
+\end{table}\end{Schunk}
+
+\begin{Schunk}
+\begin{Sinput}
+> library(stargazer)
+> tableNominal(resultados[,c(2:4)],longtable = FALSE,
++              caption.placement = "top",
++              add.to.row = list(pos = list(0),
++                                command = "\\hline"))
+\end{Sinput}
+% latex table generated in R 3.6.0 by xtable 1.8-4 package
+% Wed Sep 18 13:44:43 2019
+\begin{table}[ht]
+\centering
+\caption{} 
+\label{}
+\begingroup\footnotesize
+\begin{tabular}{ll|rrr}
+ \textbf{Variable} & \textbf{Levels} & $\mathbf{n}$ & $\mathbf{\%}$ & $\mathbf{\sum \%}$ \\ 
+  \hline \hline
+SEX & 1 & 273 & 45.5 & 45.5 \\ 
+   & 2 & 327 & 54.5 & 100.0 \\ 
+   \hline
+ & all & 600 & 100.0 &  \\ 
+   \hline
+\hline
+RACE & 1 & 437 & 72.8 & 72.8 \\ 
+   & 2 & 71 & 11.8 & 84.7 \\ 
+   & 3 & 58 & 9.7 & 94.3 \\ 
+   & 4 & 34 & 5.7 & 100.0 \\ 
+   \hline
+ & all & 600 & 100.0 &  \\ 
+   \hline
+\hline
+SES & 1 & 139 & 23.2 & 23.2 \\ 
+   & 2 & 299 & 49.8 & 73.0 \\ 
+   & 3 & 162 & 27.0 & 100.0 \\ 
+   \hline
+ & all & 600 & 100.0 &  \\ 
+   \hline
+\hline
+\end{tabular}
+\endgroup
+\end{table}\end{Schunk}
+
+
+\begin{Schunk}
+\begin{Sinput}
+> library(apa)
+> str(t_apa(t_test(LOCUS~SEX, data = resultados)))
+\end{Sinput}
+\begin{Soutput}
+t(557.77) = -2.77, p = .006, d = -0.23 NULL
+\end{Soutput}
+\begin{Sinput}
+> 
+\end{Sinput}
+\end{Schunk}
+
+\end{document}
