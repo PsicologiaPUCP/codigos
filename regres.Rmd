@@ -127,13 +127,23 @@ ggqqplot(data=hsb,x="MATH") + facet_grid(. ~ SEX)
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
 
-library(RVAideMemoire)
 library(knitr)
 library(magrittr)
 library(kableExtra)
 f4=formula(MATH~SEX)
 
-kable(byf.shapiro(f4, data=hsb)$tab)%>%
+
+tablag= aggregate(f4, hsb,
+          FUN = function(x) {y <- shapiro.test(x); c(y$statistic, y$p.value)})
+
+# para que se vea mejor:
+
+
+shapiroTest=as.data.frame(tablag[,2])
+names(shapiroTest)=c("W","Prob")
+
+
+kable(cbind(tablag[1],shapiroTest))%>%
   kable_styling(bootstrap_options = c("striped", "hover"), full_width = F, position = "left")
 ```
 
