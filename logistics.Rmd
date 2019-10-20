@@ -1,0 +1,215 @@
+Data
+
+```{r}
+link="https://docs.google.com/spreadsheets/d/e/2PACX-1vTnBAuw8v3PgGMivOBI9tFfGjVrZsVnteUF2y44HjZneYoajlrb9k61kWN300Q-n1q04iy8_nsB68n_/pub?gid=1431542138&single=true&output=csv"
+vol=read.csv(link, stringsAsFactors = F)
+```
+
+
+```{r}
+summary(vol)
+```
+
+
+```{r}
+vol$sex=factor(vol$sex,
+                  levels = c('female','male'))
+
+vol$volunteer=factor(vol$volunteer,
+                     levels = c('no','yes'),
+                     labels = c(0,1))
+
+```
+
+
+
+Queremos saber si ser mujer está relacionado con ser voluntario en estudios psicológicos. De ahi que lo logico es expresar de alguna manera cuanto se diferencia la mujer del hombre en relación al voluntariado:
+
+```{r}
+ind=vol$sex
+dep=vol$volunteer
+(volsexTable=table(dep,ind,dnn = c('volunteer','sex')))
+```
+
+La **probabilidad** que una mujer sea voluntaria
+
+```{r}
+probMV=volsexTable[2,1]/sum(volsexTable[,1])
+probMV
+```
+La probabilidad es un valor qu va de 0 a 1.
+
+
+El **odds** que sea voluntaria:
+```{r}
+OddsMV=probMV/(1-probMV)
+OddsMV
+```
+El _odds_ es la razon entre dos probabilidades: la probabilidad que ocurra un evento dividido por la probabilidad que NO ocurra ese evento.
+
+
+```{r}
+library(MASS)
+fractions(OddsMV)
+```
+
+probabilidad que una hombre sea voluntario
+
+```{r}
+probHV=volsexTable[2,2]/sum(volsexTable[,2])
+probHV
+```
+
+El odds que hombre sea voluntario:
+```{r}
+OddsHV=probHV/(1-probHV)
+OddsHV
+```
+```{r}
+fractions(OddsHV)
+```
+
+Podemos dividir odds, lo que nos da el **odds ratio**:
+```{r}
+OddsMV/OddsHV
+```
+
+El odds ratio puede ir de 0 a infinito.
+
+```{r}
+fractions(OddsMV/OddsHV)
+```
+
+```{r}
+prop.table(volsexTable,margin = 2)
+```
+
+```{r}
+mosaicplot( t(volsexTable),col = c("orange", "green"))
+```
+
+La regresión logística modela el _logaritmo_ del odds ratio:
+```{r}
+vars1=vol[,c("volunteer","sex")]
+
+rlog1=glm(volunteer~., data=vars1,family = binomial)
+summary(rlog1)
+```
+
+El resultado anterior ha usado a mujer como referencia.
+
+```{r}
+vol$sex=relevel(vol$sex,ref = "male")
+vars1=vol[,c("volunteer","sex")]
+rlog1=glm(volunteer~., data=vars1,family = binomial)
+summary(rlog1)
+```
+Vemos que sexo tiene efecto, y el simbolo del coeficiente propone que el efecto es positivo. 
+
+Tenemos la ventaja de poder usar variables numéricas:
+
+```{r}
+vars2=vol[,c("volunteer","sex","neuroticism")]
+rlog2=glm(volunteer~., data=vars2,family = binomial)
+summary(rlog2)
+```
+```{r}
+vars3=vol[,c("volunteer","sex","neuroticism","extraversion")]
+rlog3=glm(volunteer~., data=vars3,family = binomial)
+summary(rlog3)
+```
+```{r, results='asis'}
+library(stargazer)
+
+stargazer(rlog1,rlog2,rlog3,type = "html")
+```
+
+
+Pero para obtener el efecto en odds ratio:
+
+```{r}
+exp(cbind(OR = coef(rlog3), confint(rlog3)))
+```
+
+```{r}
+library(lmtest)
+lrtest(rlog1,rlog3)
+```
+```{r}
+predicted <- plogis(predict(rlog3, vars3[,-1]))
+```
+
+```{r}
+library(InformationValue)
+confusionMatrix(vars3$volunteer, predicted)
+```
+
+```{r}
+sensitivity(as.numeric(vars3$volunteer), predicted)
+```
+```{r}
+specificity(as.numeric(vars3$volunteer), predicted)
+```
+
+```{r}
+plotROC(as.numeric(vars3$volunteer), predicted)
+```
+
+```{r}
+library(ggplot2)
+ggplot(vars3, aes(x = extraversion, y = predicted))  + 
+    geom_smooth(aes(colour = sex),size = 1)
+```
+
+```{r}
+library(ggplot2)
+ggplot(vars3, aes(x = neuroticism, y = predicted))  + geom_smooth(aes(colour = sex),size = 1)
+```
+
+
+
+```{r}
+rlog4=glm(volunteer ~ sex + neuroticism*extraversion,
+                  data=vars3, family=binomial)
+summary(rlog4)
+```
+
+```{r}
+library(ggplot2)
+ggplot(vars3, aes(x = neuroticism*extraversion, y = predicted))  + geom_smooth(aes(colour = sex),size = 1)
+```
+
+```{r}
+library(effects)
+plot(Effect(focal.predictors = c("neuroticism","extraversion","sex"), 
+            mod = rlog4),multiline=T)
+```
+
+$${log}({odds}) = {log}(\frac{{p}}{{1 – p}}) = (\beta_0 + \beta_ix_i)$$
+
+
+$$Pr(VOLUNT=1|X_i) = {\frac{exp(\beta_0 + \beta_1SEX + \beta_2NEU + \beta_3EXTRAV)}{1 + exp (\beta_0 + \beta_1SEX + \beta_2NEU + \beta_3EXTRAV )}}$$
+
+
+
+
+Predecir probabilidad de voluntariado de una mujer con nivel de neuroticism=13 y extraversion=8: 
+```{r}
+ndata <- data.frame(sex=factor(c("female")), 
+                      neuroticism=13, extraversion=8)
+predict(object = rlog4, newdata = ndata, type = "response")
+```
+
+Predecir probabilidad de voluntariado de una mujer y hombre con los mismos niveles anteriores de neuroticism y extraversion.
+```{r}
+ndata <- data.frame(sex=factor(c("female","male")), 
+                      neuroticism=13, extraversion=8)
+predict(object = rlog4, newdata = ndata, type = "response")
+```
+
+Predecir probabilidad de voluntariado de dos mujeres,  con nivel de neuroticism de 13 y 10, y extraversion de 8 y 21, respectivamente: 
+```{r}
+ndata <- data.frame(sex=factor(c("female","male")), 
+                      neuroticism=c(13,10), extraversion=c(8,21))
+predict(object = rlog4, newdata = ndata, type = "response")
+```
