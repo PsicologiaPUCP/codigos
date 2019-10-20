@@ -28,60 +28,92 @@ link="https://docs.google.com/spreadsheets/d/e/2PACX-1vTnBAuw8v3PgGMivOBI9tFfGjV
 vol=read.csv(link, stringsAsFactors = F)
 ```
 
-Verificamos que tipo de datos tenemos:
+Verificamos qué tipo de datos tenemos:
 
 ```{r}
 str(vol)
 ```
 
-Volvemos categórico:
+Hay dos columnas que deben ser cinvertidas a categóricas:
 
 ```{r}
 vol[,c(3,4)]=lapply(vol[,c(3,4)],as.factor)
 ```
 
+Hay que tener en cuenta lo siguiente:
 
-## 1. La tabla de contingencia
+```{r}
+summary(vol)
+```
+
+Las categóricas siempre se almacenan internamente como números, y éstos se asignarán por defecto en orden alfabético. De ahi que el primer nivel de cada categórica se conoce como la **categoría de referencia**.
+
+
+## 1. Usando la tabla de contingencia
 
 Queremos saber si ser mujer está relacionado con ser voluntario en estudios psicológicos. 
 
 ```{r}
-ind=vol$sex
-dep=vol$volunteer
-(volsexTable=table(dep,ind,dnn = c('volunteer','sex')))
+ind=vol$sex # a la columna
+dep=vol$volunteer # a la fila
+volsexTable=table(dep,ind,dnn = c('volunteer','sex'))
+
+### suma de columna
+addmargins(volsexTable,margin = 1)
 ```
 
-De ahi que lo logico es expresar de alguna manera cuanto se diferencia la mujer del hombre en relación al voluntariado.
+Saber si ser mujer está relacionado con ser voluntario implica saber dos cosas más:
 
-### 1.1. Probabilidades y ODDS
+* Si elijo una mujer a azar, qué probabilidad se tiene  que ésta sea voluntaria. 
+* Cómo comparo el "voluntarismo" de la mujer con la del hombre.
 
-* La **probabilidad** que una mujer sea voluntaria
+### 1.1. Probabilidades y ODDS7
+
+#### A. Caso de la mujer:
+
+* La **probabilidad** que una mujer sea voluntaria, la división del ser voluntaria entre el total de mujeres:
 
 ```{r}
 probMV=volsexTable[2,1]/sum(volsexTable[,1])
 probMV
 ```
-La probabilidad es un valor qu va de 0 a 1.
+
+La probabilidad es un valor qu va de 0 a 1. Recuperemos la división así:
+
+```{r}
+library(MASS)
+fractions(probMV)
+```
 
 
-* El **odds** que sea voluntaria:
+* Representeos el **odds** que sea voluntaria, la división entre ser o no ser voluntaria:
+```{r}
+volsexTable[2,1]/volsexTable[1,1]
+```
+
+Que se origina de:
+
+```{r}
+fractions(volsexTable[2,1]/volsexTable[1,1])
+```
+
+El _odds_ suele representarse además como la razón entre dos probabilidades: la probabilidad que ocurra un evento dividido por la probabilidad que NO ocurra ese evento:
+
 ```{r}
 OddsMV=probMV/(1-probMV)
 OddsMV
 ```
-El _odds_ es la razon entre dos probabilidades: la probabilidad que ocurra un evento dividido por la probabilidad que NO ocurra ese evento.
 
-* Podemos recuperar la fracción así:
-```{r}
-library(MASS)
-fractions(OddsMV)
-```
+#### B. Caso del hombre:
 
 * Probabilidad que una hombre sea voluntario
 
 ```{r}
 probHV=volsexTable[2,2]/sum(volsexTable[,2])
 probHV
+```
+```{r}
+fractions(probHV)
 ```
 
 * El odds que hombre sea voluntario:
@@ -93,7 +125,10 @@ OddsHV
 fractions(OddsHV)
 ```
 
-Podemos dividir odds, lo que nos da el **odds ratio**:
+#### C. Comparando Mujer y Hombre:
+
+Para saber que diferencia produce el sexo en el voluntariado, podemos dividir los odds, lo que nos da el **odds ratio**:
+
 ```{r}
 OddsMV/OddsHV
 ```
@@ -107,9 +142,9 @@ fractions(OddsMV/OddsHV)
 Esto informa que la cantidad de mujeres que encontrarias de voluntarias ante una cantidad de hombres voluntarios.
 
 
-### 1.2. Procentajes y gráficas
+### 1.2. Porcentajes y gráficas
 
-Veamos la tabla de contingencia con los procentajes por columna:
+Veamos la tabla de contingencia con los porcentajes por columna:
 
 ```{r}
 prop.table(volsexTable,margin = 2)
@@ -120,6 +155,8 @@ Grafiquemoslo:
 ```{r}
 mosaicplot( t(volsexTable),col = c("orange", "green"))
 ```
+
+Esto hace intuir que la mujer se
 
 ## 2. Regresión Logística
 
