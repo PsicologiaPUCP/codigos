@@ -156,20 +156,30 @@ Grafiquemoslo:
 mosaicplot( t(volsexTable),col = c("orange", "green"))
 ```
 
-Esto hace intuir que la mujer se
+A pesar de la diferencia, ¿será esta significativa?
 
 ## 2. Regresión Logística
 
-La regresión logística modela el _logaritmo_ del odds ratio:
+La regresión logística modela el comportamiento de la probabilidad del evento de interés:
+
+$${log}(\frac{{p}}{{1 – p}}) = (\beta_0 + \beta_ix_i)$$
+
+La parte izquierda representa esa probabilidad pero en término del odds. La parte derecha de la ecuación es igual a la ecuación de una recta, pero estamos modelando al logaritmo del odds.
 
 ```{r}
+### primer modelo:
+#data
 vars1=vol[,c("volunteer","sex")]
-
+#regresion
 rlog1=glm(volunteer~., data=vars1,family = binomial)
+
+#resultado
 summary(rlog1)
 ```
 
-El resultado anterior ha usado a mujer como referencia. Ahora sabes que ser hombre disminuye la probabilidad de ser voluntario. Ajustemos la referencia para ver el efecto de mujer:
+Los coeficientes, como se vió en la ecuación anterior, están modelando al logaritmo del odds de ser voluntario.
+
+El resultado anterior ha usado a mujer como referencia: cuanto afecta al log odds de ser voluntario el ser hombre en comparación con ser mujer (la referencia). Ahora sabes que ser hombre disminuye la probabilidad de ser voluntario. Ajustemos la referencia para ver el efecto de mujer:
 
 ```{r}
 vol$sex=relevel(vol$sex,ref = "male")
@@ -178,43 +188,43 @@ rlog1=glm(volunteer~., data=vars1,family = binomial)
 summary(rlog1)
 ```
 
-Vemos que sexo tiene efecto, y el simbolo del coeficiente propone que el efecto es positivo. Ese valor, si le explicas exponencial, hayarás un valor conocido:
+Vemos que sexo tiene efecto, y el simbolo del coeficiente propone que el efecto es positivo. Ese valor como modela a un logaritmo no es fácil de interpretar. Pero, si le aplicas exponencial, hallarás un valor conocido:
 
 ```{r}
 sexF=coef(rlog1)["sexfemale"]
 exp(sexF)
 ```
 
-Hasta aquí pudimos haber usado aritmética con las tablas de contingencia, pero ya no son utiles si tenemos variables numéricas. La regresión logística lo hace facil:
+Ahora sabemos que el efecto de sexo es significativo gracias a la regresión logística, algo que no teníamos con las tablas de contingencia.
+
+Además, con la regresión logística podemos tener predictoes numéricos, lo que escapa de la utilidad de las tablas de contingencia:
 
 ```{r}
 vars2=vol[,c("volunteer","sex","neuroticism")]
 rlog2=glm(volunteer~., data=vars2,family = binomial)
-summary(rlog2)
 ```
+
 ```{r}
 vars3=vol[,c("volunteer","sex","neuroticism","extraversion")]
 rlog3=glm(volunteer~., data=vars3,family = binomial)
-summary(rlog3)
 ```
 
-Como usamos el anova antes, podemos usar el likelihood ratio test:
+Veamos todos:
+
+```{r, results='asis'}
+library(stargazer)
+
+stargazer(rlog1,rlog2,rlog3,type = "html",no.space = F,digits = 1,digit.separator="")
+```
+
+Parece que el modelo 2  no es adecuado, revisemo usando el likelihood ratio test (que reemplaza al anova):
 
 ```{r}
 library(lmtest)
 lrtest(rlog1,rlog2, rlog3)
 ```
 
-Parece que el modelo 2  no es adecuado, revisemos:
-
-```{r, results='asis'}
-library(stargazer)
-
-stargazer(rlog1,rlog2,rlog3,type = "html")
-```
-
-
-Confimos que el tercero es el mejor. Ahora obtengamos sus coeficientes en odds ratio:
+Como el tercero es el mejor, obtengamos sus coeficientes en odds ratio:
 
 ```{r}
 exp(cbind(OR = coef(rlog3), confint(rlog3)))
@@ -223,31 +233,25 @@ exp(cbind(OR = coef(rlog3), confint(rlog3)))
 
 
 
-
-
 ### Evaluando
+
+Calculemos las probabilidades predecidas:
 
 ```{r}
 predicted <- plogis(predict(rlog3, vars3[,-1]))
 ```
 
+Veamos la matriz de confusión:
 ```{r}
 library(InformationValue)
 confusionMatrix(vars3$volunteer, predicted)
 ```
 
-```{r}
-sensitivity(as.numeric(vars3$volunteer), predicted)
-```
-```{r}
-specificity(as.numeric(vars3$volunteer), predicted)
-```
+La antidiagonal debería ser 0s si fuera una predicción perfecta.
 
-```{r}
-plotROC(as.numeric(vars3$volunteer), predicted)
-```
+## Resumenes gráficos
 
-No se ve tan bien.
+Veamos la relación de extraversión y sexo con la predicción:
 
 ```{r}
 library(ggplot2)
@@ -255,10 +259,13 @@ ggplot(vars3, aes(x = extraversion, y = predicted))  +
     geom_smooth(aes(colour = sex),size = 1)
 ```
 
+Veamos la relación de neuroticismo y sexo con la predicción:
+
 ```{r}
 ggplot(vars3, aes(x = neuroticism, y = predicted))  + geom_smooth(aes(colour = sex),size = 1)
 ```
 
+El efecto no es lineal, por lo que le damos una mirada a la interección:
 
 ```{r}
 ggplot(vars3, aes(x = neuroticism*extraversion, y = predicted))  + geom_smooth(aes(colour = sex),size = 1)
@@ -284,12 +291,12 @@ Nos quedaremos con este modelo si es realmente mejor:
 lrtest(rlog3,rlog4)
 ```
 
-Siendo que lo es, preparemos las ecuaciones:
-
-$${log}({odds}) = {log}(\frac{{p}}{{1 – p}}) = (\beta_0 + \beta_ix_i)$$
+Siendo que sí lo es, preparemos las ecuaciones:
 
 
-$$Pr(VOLUNT=1|X_i) = {\frac{exp(\beta_0 + \beta_1SEX + \beta_2NEU + \beta_3EXTRAV)}{1 + exp (\beta_0 + \beta_1SEX + \beta_2NEU + \beta_3EXTRAV )}}$$
+
+
+$$Pr(VOLUNT=1|X_i) = {\frac{exp(\beta_0 + \beta_1SEX + \beta_2NEU + \beta_3EXTRAV + \beta_4EXTRAV*NEU)}{1 + exp (\beta_0 + \beta_1SEX + \beta_2NEU + \beta_3EXTRAV + \beta_4EXTRAV*NEU)}}$$
 
 
 Evaluamos nuevamente:
@@ -303,34 +310,26 @@ library(InformationValue)
 confusionMatrix(vars3$volunteer, predicted2)
 ```
 
-```{r}
-sensitivity(as.numeric(vars3$volunteer), predicted2)
-```
-```{r}
-specificity(as.numeric(vars3$volunteer), predicted2)
-```
+La mejora se nota en la matriz de confusión.
 
-```{r}
-plotROC(as.numeric(vars3$volunteer), predicted2)
-```
+## Predicciones
 
 
-
-Predecir probabilidad de voluntariado de una mujer con nivel de neuroticism=13 y extraversion=8: 
+Predecir probabilidad de voluntariado de una mujer con nivel de neuroticismo=13 y extraversion=8: 
 ```{r}
 ndata <- data.frame(sex=factor(c("female")), 
                       neuroticism=13, extraversion=8)
 predict(object = rlog4, newdata = ndata, type = "response")
 ```
 
-Predecir probabilidad de voluntariado de una mujer y hombre con los mismos niveles anteriores de neuroticism y extraversion.
+Predecir probabilidad de voluntariado de una mujer y hombre con los mismos niveles anteriores de neuroticismo y extraversion.
 ```{r}
 ndata <- data.frame(sex=factor(c("female","male")), 
                       neuroticism=13, extraversion=8)
 predict(object = rlog4, newdata = ndata, type = "response")
 ```
 
-Predecir probabilidad de voluntariado de dos mujeres,  con nivel de neuroticism de 13 y 10, y extraversion de 8 y 21, respectivamente: 
+Predecir probabilidad de voluntariado de dos mujeres,  con nivel de neuroticismo de 13 y 10, y extraversion de 8 y 21, respectivamente: 
 ```{r}
 ndata <- data.frame(sex=factor(c("female","male")), 
                       neuroticism=c(13,10), extraversion=c(8,21))
