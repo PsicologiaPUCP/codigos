@@ -1,66 +1,118 @@
-```{r}
+
+Esta data representa el interés en diferentes tipos gustos sobre películas:
+
+<iframe width="800" height="600" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQTgH1Y0YksmtL4G9ZPoODRU-au5r1FtuHfm8K27ySxhS-zCS_FuEuMGeco-rD1O5798BDiK5al_hXc/pubhtml?gid=1732121265&amp;single=true&amp;widget=true&amp;headers=false"></iframe>
+
+
+
+```{r, echo=FALSE, eval=TRUE}
 link="https://docs.google.com/spreadsheets/d/e/2PACX-1vQTgH1Y0YksmtL4G9ZPoODRU-au5r1FtuHfm8K27ySxhS-zCS_FuEuMGeco-rD1O5798BDiK5al_hXc/pub?gid=1732121265&single=true&output=csv"
 
 movie=read.csv(link,stringsAsFactors = T)
 ```
 
+Los tipos de 
 
-
-```{r}
+```{r, echo=FALSE, eval=FALSE}
 str(movie)
 ```
 
-```{r}
+```{r, echo=FALSE, eval=TRUE, results='asis'}
+library(psych)
+library(knitr)
 # ver orden original
-summary(movie)
+kable(psych::describe(movie[,-c(1,12)]))
 ```
 
-```{r}
+```{r, echo=FALSE, eval=TRUE}
 movieF=movie[,-c(1,12)]
 ```
 
 
 
-```{r}
+1. Calculemos matriz de correlación:
+
+```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
+
+theData=movie[,-c(1,12)] # sin los Scores ni nombre de país.
+
+# esta es:
+library(polycor)
+corMatrix=polycor::hetcor(theData)$correlations
+```
+
+
+
+2. Explorar correlaciones:
+
+* Sin evaluar significancia:
+```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
+library(ggcorrplot)
+
+ggcorrplot(corMatrix)
+```
+
+Si puedes ver bloques correlacionados, hay esperanza de un buen analisis factorial.
+
+
+3. Verificar si datos permiten factorizar:
+
+```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
 library(psych)
+psych::KMO(corMatrix) 
 ```
 
-```{r}
-poly_cor = polychoric(movieF)
+4. Verificar si la matriz de correlaciones es adecuada
 
-rho = poly_cor$rho
+Aqui hay dos pruebas:
+
+* Hnula: La matriz de correlacion es una [matriz identidad](https://en.wikipedia.org/wiki/Identity_matrix)
+
+```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
+cortest.bartlett(corMatrix,n=nrow(theData))$p.value>0.05
 ```
 
+* Hnula: La matriz de correlacion es una [matriz singular](http://mathworld.wolfram.com/SingularMatrix.html).
 
+```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
+library(matrixcalc)
 
-
-
-```{r}
-cor.plot(rho, 
-         numbers=T, 
-         upper=FALSE, 
-         main = "Polychoric Correlation", 
-         show.legend = FALSE)
+is.singular.matrix(corMatrix)
 ```
 
-```{r}
-KMO(movieF)
+5. Determinar en cuantos factores o variables latentes podríamos redimensionar la data:
+
+```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
+fa.parallel(corMatrix,fm = 'ML', fa = 'fa')
 ```
 
-```{r}
-fa.parallel(rho, fm="pa", fa="fa", main = "Scree Plot")
-```
+Se sugieren 3, veamos:
 
 
-```{r}
-movieF_result <- fa(movieF, cor = 'poly',
-                     nfactors=3, 
-                     rotate="varimax")
+6. Redimensionar a numero menor de factores
+
+* Resultado inicial:
+
+```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
+library(GPArotation)
+movieF_result <- fa(theData,nfactors = 3,cor = 'mixed',rotate = "varimax",fm="minres")
+print(movieF_result$loadings)
 ```
 
-```{r}
-movieF_result$loadings
+* Resultado mejorado:
+
+```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
+print(movieF_result$loadings,cutoff = 0.4)
 ```
+
+Cuando logramos que cada variable se vaya a un factor, tenemos una _estructura simple_.
+
+* Resultado visual:
+
+```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
+fa.diagram(movieF_result)
+```
+
 
 ```{r}
 # mientras mas grande mejor (lo que aporta)
@@ -78,25 +130,124 @@ sort(movieF_result$complexity)
 
 
 
-
-```{r}
-fa.diagram(movieF_result)
+```{r, message=FALSE}
+library(lavaan)
 ```
 
 
 
 ```{r}
-movie=cbind(movie,movieF_result$scores)
+modelCFA <- '
+  # measurement model
+    A_Solas =~ War + Action + SciFi + Documentary
+    En_Pareja =~ Horror + Thriller
+    En_Grupo =~ Fantasy + Animated + Comedy + Romantic
+'
 ```
+
+
 ```{r}
-str(movie)
+ORDINALES=c("Horror","Thriller","Comedy","Romantic",   "SciFi","War","Fantasy","Animated","Documentary","Action")
+```
+
+
+```{r, warning=FALSE}
+cfaFIT=cfa(modelCFA, 
+           data=theData,
+           ordered = ORDINALES)
+
 ```
 
 ```{r}
-alguien=c(3,3,3,4,4,5,3,4,3,5)
-predict(movieF_result,alguien,movieF)
+library(semPlot)
+semPaths(cfaFIT, what='std', nCharNodes=6, sizeMan=5,
+         edge.label.cex=1.25, curvePivot = TRUE, fade=FALSE,color='black')
 ```
 
+```{r}
+allParamCFA=parameterEstimates(cfaFIT,standardized = T)
+
+allParamCFA[allParamCFA$op=="=~",]
+```
+
+```{r}
+allFitCFA=as.list(fitMeasures(cfaFIT))
+```
+
+```{r}
+allFitCFA[c("chisq", "df", "pvalue")] # pvalue>0.05
+```
+
+
+
+```{r}
+allFitCFA$tli # > 0.90
+```
+
+
+```{r}
+allFitCFA[c('rmsea.ci.lower','rmsea' ,'rmsea.ci.upper')] # 0.05 en el Int de Conf?
+```
+```{r}
+allFitCFA$srmr  # < 0.08
+```
+
+
+
+```{r}
+modelSEM <- '
+  # measurement model
+    A_Solas =~ War + Action + SciFi + Documentary
+    En_Pareja =~ Horror + Thriller
+    En_Grupo =~ Fantasy + Animated + Comedy + Romantic
+  # regressions
+    A_Solas ~ En_Pareja + En_Grupo
+'
+```
+
+
+
+
+```{r, warning=FALSE}
+semFIT <- sem(modelSEM, 
+              data=theData,
+              ordered = ORDINALES)
+```
+
+```{r}
+semPaths(semFIT, what='std', nCharNodes=6, sizeMan=5,
+         edge.label.cex=1.25, curvePivot = TRUE, fade=FALSE,color='black')
+```
+
+
+
+```{r}
+allParamSEM=parameterEstimates(semFIT,standardized = T)
+
+kable(allParamSEM[allParamSEM$op=="~",])
+```
+```{r}
+kable(allParamSEM[allParamSEM$op=="=~",])
+```
+
+```{r}
+allFitSEM=as.list(fitMeasures(semFIT))
+```
+
+```{r}
+allFitSEM[c("chisq", "df", "pvalue")] # pvalue>0.05
+```
+
+
+```{r}
+allFitSEM$tli # > 0.90
+```
+```{r}
+allFitSEM[c( 'rmsea.ci.lower','rmsea','rmsea.ci.upper')] # > toca 0.08
+```
+```{r}
+allFitSEM$srmr  # < 0.08
+```
 
 
 
