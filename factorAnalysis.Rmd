@@ -1,0 +1,102 @@
+```{r}
+link="https://docs.google.com/spreadsheets/d/e/2PACX-1vQTgH1Y0YksmtL4G9ZPoODRU-au5r1FtuHfm8K27ySxhS-zCS_FuEuMGeco-rD1O5798BDiK5al_hXc/pub?gid=1732121265&single=true&output=csv"
+
+movie=read.csv(link,stringsAsFactors = T)
+```
+
+
+
+```{r}
+str(movie)
+```
+
+```{r}
+# ver orden original
+summary(movie)
+```
+
+```{r}
+movieF=movie[,-c(1,12)]
+```
+
+
+
+```{r}
+library(psych)
+```
+
+```{r}
+poly_cor = polychoric(movieF)
+
+rho = poly_cor$rho
+```
+
+
+
+
+
+```{r}
+cor.plot(rho, 
+         numbers=T, 
+         upper=FALSE, 
+         main = "Polychoric Correlation", 
+         show.legend = FALSE)
+```
+
+```{r}
+KMO(movieF)
+```
+
+```{r}
+fa.parallel(rho, fm="pa", fa="fa", main = "Scree Plot")
+```
+
+
+```{r}
+movieF_result <- fa(movieF, cor = 'poly',
+                     nfactors=3, 
+                     rotate="varimax")
+```
+
+```{r}
+movieF_result$loadings
+```
+
+```{r}
+# mientras mas grande mejor (lo que aporta)
+sort(movieF_result$communalities)
+```
+```{r}
+# mientras mas grande peor (lo que mantiene)
+sort(movieF_result$uniquenesses)
+```
+
+```{r}
+sort(movieF_result$complexity)
+```
+
+
+
+
+
+```{r}
+fa.diagram(movieF_result)
+```
+
+
+
+```{r}
+movie=cbind(movie,movieF_result$scores)
+```
+```{r}
+str(movie)
+```
+
+```{r}
+alguien=c(3,3,3,4,4,5,3,4,3,5)
+predict(movieF_result,alguien,movieF)
+```
+
+
+
+

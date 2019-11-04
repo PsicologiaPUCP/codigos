@@ -1,0 +1,153 @@
+```{r}
+link="https://docs.google.com/spreadsheets/d/e/2PACX-1vQTgH1Y0YksmtL4G9ZPoODRU-au5r1FtuHfm8K27ySxhS-zCS_FuEuMGeco-rD1O5798BDiK5al_hXc/pub?gid=1732121265&single=true&output=csv"
+
+movie=read.csv(link,stringsAsFactors = T)
+```
+
+![](https://i.imgur.com/O6KWGaD.png)
+
+
+
+
+```{r}
+str(movie)
+```
+
+
+```{r}
+movieF=movie[,-c(1,12)]
+```
+
+
+
+```{r}
+library(lavaan)
+```
+
+```{r}
+names(movieF)
+```
+
+
+```{r}
+modelCFA <- '
+  # measurement model
+    Alone =~ War + Action + SciFi + Documentary
+    InCouple =~ Horror + Thriller
+    InGroup =~ Fantasy + Animated + Comedy + Romantic
+'
+```
+
+
+```{r}
+ORDINALES=c("Horror","Thriller","Comedy","Romantic",   "SciFi","War","Fantasy","Animated","Documentary","Action")
+```
+
+
+```{r}
+cfaFIT=cfa(modelCFA, 
+           data=movieF,
+           ordered = ORDINALES)
+
+```
+
+```{r}
+library(semPlot)
+semPaths(cfaFIT, what='std', nCharNodes=6, sizeMan=5,
+         edge.label.cex=1.25, curvePivot = TRUE, fade=FALSE,color='black')
+```
+
+```{r}
+allParamCFA=parameterEstimates(cfaFIT,standardized = T)
+
+allParamCFA[allParamCFA$op=="=~",]
+```
+
+```{r}
+allFitCFA=as.list(fitMeasures(cfaFIT))
+```
+
+```{r}
+allFitCFA[c("chisq", "df", "pvalue")] # pvalue>0.05
+```
+
+
+```{r}
+allFitCFA$nfi # > 0.90
+```
+
+
+```{r}
+allFitCFA$tli # > 0.90
+```
+
+
+```{r}
+allFitCFA[c('rmsea.ci.lower','rmsea' ,'rmsea.ci.upper')] # 0.05 en el Int de Conf?
+```
+```{r}
+allFitCFA$srmr  # < 0.08
+```
+
+
+
+```{r}
+modelSEM <- '
+  # measurement model
+    Alone =~ War + Action + SciFi + Documentary
+    InCouple =~ Horror + Thriller
+    InGroup =~ Fantasy + Animated + Comedy + Romantic
+  # regressions
+    Alone ~ InCouple + InGroup
+'
+```
+
+
+
+
+```{r}
+semFIT <- sem(modelSEM, 
+              data=movieF,
+              ordered = ORDINALES)
+```
+
+```{r}
+semPaths(semFIT, what='std', nCharNodes=6, sizeMan=5,
+         edge.label.cex=1.25, curvePivot = TRUE, fade=FALSE,color='black')
+```
+
+
+
+```{r}
+allParamSEM=parameterEstimates(semFIT,standardized = T)
+
+allParamSEM[allParamSEM$op=="~",]
+```
+```{r}
+allParamSEM[allParamSEM$op=="=~",]
+```
+
+```{r}
+allFitSEM=as.list(fitMeasures(semFIT))
+```
+
+```{r}
+allFitSEM[c("chisq", "df", "pvalue")] # pvalue>0.05
+```
+
+
+```{r}
+allFitSEM$nfi # > 0.90
+```
+```{r}
+allFitSEM$tli # > 0.90
+```
+```{r}
+allFitSEM[c( 'rmsea.ci.lower','rmsea','rmsea.ci.upper')] # > toca 0.08
+```
+```{r}
+allFitSEM$srmr  # < 0.08
+```
+
+
+
