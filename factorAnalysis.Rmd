@@ -83,7 +83,7 @@ is.singular.matrix(corMatrix)
 5. Determinar en cuantos factores o variables latentes podríamos redimensionar la data:
 
 ```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
-fa.parallel(corMatrix,fm = 'ML', fa = 'fa')
+fa.parallel(corMatrix,fm = 'ML', fa = 'fa',n.obs = nrow(theData))
 ```
 
 Se sugieren 3, veamos:
