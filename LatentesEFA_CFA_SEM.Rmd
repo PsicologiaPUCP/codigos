@@ -215,7 +215,7 @@ semPaths(cfaFIT, what='std', nCharNodes=6, sizeMan=5,
 
 Qué tan buena es nuestra propuesta:
 
-* El ChiSquare es significativo:
+* El ChiSquare es NO significativo:
 
 ```{r}
 allFitCFA=as.list(fitMeasures(cfaFIT))
@@ -296,20 +296,24 @@ Qué tan bueno es el modelo?
 allFitSEM=as.list(fitMeasures(semFIT))
 ```
 
+* El ChiSquare es NO significativo:
+
 ```{r}
 allFitSEM[c("chisq", "df", "pvalue")] # pvalue>0.05
 ```
 
+* El Índice Tucker Lewi es mayor a 0.9?
 
 ```{r}
 allFitSEM$tli # > 0.90
 ```
+
+* La Raíz del error cuadrático medio de aproximación es menor a 0.05?
+
 ```{r}
 allFitSEM[c( 'rmsea.ci.lower','rmsea','rmsea.ci.upper')] #  toca 0.08
 ```
-```{r}
-allFitSEM$srmr  # < 0.08
-```
+
 
 
 
