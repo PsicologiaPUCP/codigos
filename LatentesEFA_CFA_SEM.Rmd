@@ -97,7 +97,7 @@ cortest.bartlett(corMatrix,n=nrow(theData))$p.value>0.05
 
 * Prueba de No-Singularidad, para descartar que la matriz de correlacion sea una [matriz singular](http://mathworld.wolfram.com/SingularMatrix.html). La H0 propone que la matriz es una matriz singular:
 
-```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
+```{r, echo=FALSE, eval=TRUE,warning=FALSE, message=FALSE}
 library(matrixcalc)
 
 is.singular.matrix(corMatrix)
@@ -105,26 +105,26 @@ is.singular.matrix(corMatrix)
 
 4. Determinar en cuantos factores o variables latentes podríamos redimensionar la data:
 
-```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
-fa.parallel(corMatrix,fm = 'ML', fa = 'fa',n.obs = nrow(theData),show.legend=F)
+```{r, echo=FALSE, eval=TRUE,warning=FALSE, message=FALSE}
+fa.parallel(corMatrix,fm = 'pa', fa = 'fa',n.obs = nrow(theData),show.legend=F)
 ```
 
-Como se sugieren 3, veamos:
+Como se sugieren 4, veamos:
 
 
 5. Redimensionar a numero menor de factores
 
 * Resultado inicial:
 
-```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
+```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE, echo=FALSE}
 library(GPArotation)
-movieF_result <- fa(theData,nfactors = 3,cor = 'mixed',rotate = "varimax",fm="ML")
+movieF_result <- fa(theData,nfactors = 4,cor = 'mixed',rotate = "varimax",fm="ML")
 print(movieF_result$loadings)
 ```
 
 * Resultado mejorado:
 
-```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
+```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE, echo=FALSE}
 print(movieF_result$loadings,cutoff = 0.4)
 ```
 
@@ -132,7 +132,7 @@ Cuando logramos que cada variable se vaya a un factor, tenemos una _estructura s
 
 * Resultado visual:
 
-```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE}
+```{r, echo=TRUE, eval=TRUE,warning=FALSE, message=FALSE, echo=FALSE}
 fa.diagram(movieF_result)
 ```
 
@@ -141,19 +141,19 @@ fa.diagram(movieF_result)
 
 Revisamos las **comunalidades** para ver cuanto han contribuido las variables al proceso en total:
 
-```{r}
+```{r, echo=FALSE}
 sort(movieF_result$communalities)
 ```
 
 Su opuesto es la **unicidad**, lo que no comparten en el proceso:
 
-```{r}
+```{r, echo=FALSE}
 # mientras mas grande peor (lo que mantiene)
 sort(movieF_result$uniquenesses)
 ```
 
 La **complejidad** nos permite saber si una variable le pertenecería a un sólo factor, o no:
-```{r}
+```{r, echo=FALSE}
 sort(movieF_result$complexity)
 ```
 
@@ -185,21 +185,27 @@ Podemos indicar cuáles son las ordinales:
 ORDINALES=c("Horror","Thriller","Comedy","Romantic",   "SciFi","War","Fantasy","Animated","Documentary","Action")
 ```
 
-Luego, vemos que produce el modelo:
+Luego, calculamos resultados del modelo:
 
 ```{r, warning=FALSE}
 cfaFIT=cfa(modelCFA, 
            data=theData,
            ordered = ORDINALES)
+```
+
+Y vemos resultados:
+
+```{r, echo=FALSE}
 allParamCFA=parameterEstimates(cfaFIT,standardized = T)
 
 kable(allParamCFA[allParamCFA$op=="=~",])
 
 ```
 
+
 Graficamente:
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE,echo=FALSE}
 
 library(semPlot)
 semPaths(cfaFIT,color='black')
@@ -207,7 +213,7 @@ semPaths(cfaFIT,color='black')
 
 O...
 
-```{r}
+```{r,echo=FALSE}
 semPaths(cfaFIT, what='std', nCharNodes=6, sizeMan=5,
          edge.label.cex=1.25, curvePivot = TRUE, fade=FALSE,color='black')
 
@@ -217,23 +223,21 @@ Qué tan buena es nuestra propuesta:
 
 * El ChiSquare es NO significativo:
 
-```{r}
+```{r,echo=FALSE}
 allFitCFA=as.list(fitMeasures(cfaFIT))
-```
 
-```{r}
 allFitCFA[c("chisq", "df", "pvalue")] # pvalue>0.05
 ```
 
 * El Índice Tucker Lewi es mayor a 0.9?
 
-```{r}
+```{r,echo=FALSE}
 allFitCFA$tli # > 0.90
 ```
 
 * La Raíz del error cuadrático medio de aproximación es menor a 0.05?
 
-```{r}
+```{r,echo=FALSE}
 allFitCFA[c('rmsea.ci.lower','rmsea' ,'rmsea.ci.upper')] # 0.05 en el Int de Conf?
 ```
 
@@ -271,13 +275,15 @@ semFIT <- sem(modelSEM,
 
 Estos son los resultados:
 
-
-```{r}
+* Regresiones
+```{r,echo=FALSE}
 allParamSEM=parameterEstimates(semFIT,standardized = T)
 
 kable(allParamSEM[allParamSEM$op=="~",])
 ```
-```{r}
+
+* Cargas
+```{r,echo=FALSE}
 kable(allParamSEM[allParamSEM$op=="=~",])
 ```
 
@@ -304,13 +310,13 @@ allFitSEM[c("chisq", "df", "pvalue")] # pvalue>0.05
 
 * El Índice Tucker Lewi es mayor a 0.9?
 
-```{r}
+```{r,echo=FALSE}
 allFitSEM$tli # > 0.90
 ```
 
 * La Raíz del error cuadrático medio de aproximación es menor a 0.05?
 
-```{r}
+```{r,echo=FALSE}
 allFitSEM[c( 'rmsea.ci.lower','rmsea','rmsea.ci.upper')] #  toca 0.08
 ```
 
